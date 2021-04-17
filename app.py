@@ -1,23 +1,45 @@
-import ccxt
+from flask import Flask 
+import pandas as pd
+from flask import Flask, request, render_template 
 import sqlite3
+import ccxt 
+app = Flask(__name__)
 
 
-connection = sqlite3.connect("trades.db")
 
-print(connection.total_changes)
-
+global connection
+connection = sqlite3.connect('trades.db')
+global cur
 cursor = connection.cursor()
 
-#cursor.execute("CREATE TABLE trades (coin TEXT, amount INTEGER, average_price INTEGER)") 
+def main():
+    coin = str(input("What is coin"))
+    amount = float(input("How much"))
+    entry = float(input("What price"))
+    
+    sql_insert(coin, amount, entry)
+    coin_info(coin)
 
-cursor.execute("INSERT INTO trades VALUES('BTC', 0.002, 1000)")
 
-cursor.execute("INSERT INTO trades VALUES('ETH', 1.2, 4500)")
+def coin_info(coin):
 
-rows = cursor.execute("SELECT coin, amount, average_price FROM trades").fetchall() 
+    rows = cursor.execute("SELECT coin, amount, entry FROM trades").fetchall() 
+    print(rows)
 
-print(rows)
+def sql_insert(coin, amount, entry):
+    
+    insert = 'INSERT INTO trades VALUES("{0}", {1}, {2})'.format(coin, float(amount), float(entry))
 
-# Create functions that insert data into the database and display it into a Flask Web app. 
+    cursor.execute(insert) 
+    connection.commit()
 
-# Finds matching coin, finds API and displays price in real time. 
+main()
+#
+#@app.route("/")
+#
+#def main():
+#    while True:
+#        return render_template('home.html')
+#
+#
+
