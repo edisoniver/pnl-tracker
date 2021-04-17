@@ -8,7 +8,7 @@
 - [] Basic PNL calculation. 
 - [] Async / AJAX for real time updates for PNL, crypto prices and tickers.
 - [] Create a Flask web app for a GUI.
-
+- [] Read more up on WebSockets and JavaScript 
 
 **Optional** 
 
