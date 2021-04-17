@@ -14,4 +14,6 @@
 
 - Create a login system that allow users to place their spot entries without the need of their binance API token. 
 
+***Main Library for Information***
 
+- (https://github.com/ccxt/ccxt/wiki)
