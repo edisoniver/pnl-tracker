@@ -1,25 +1,23 @@
 import ccxt
-# from variable id
-exchange_id = 'binance'
-exchange_class = getattr(ccxt, exchange_id)
-exchange = exchange_class({
-    'apiKey': '98mlIyVASCNtJk9twyoYwJSmAnqmMf7XmWpPvsPUEllsHemUAtxRKs44ykuo8rdv',
-    'secret': 'aNDNqfWkZIZqEMME2OUMnAxvZujhkbMZgkGlVA4EbwdIB9JZccGJzFBkHR3VXkat',
-    'timeout': 30000,
-    'enableRateLimit': True,
-})
-
-print(exchange.load_markets())
-
-etheurId = exchange.market_id('ETH/USDT')   # get market id by symbol
-
-symbols = exchange.symbols                 # get a list of symbols
-symbols2 = list(exchange.markets.keys())   # same as previous line
-
-#print(exchange.id, symbols)                # print all symbols
-print(etheurId)
-currencies = exchange.currencies  
+import sqlite3
 
 
+connection = sqlite3.connect("trades.db")
 
+print(connection.total_changes)
 
+cursor = connection.cursor()
+
+#cursor.execute("CREATE TABLE trades (coin TEXT, amount INTEGER, average_price INTEGER)") 
+
+cursor.execute("INSERT INTO trades VALUES('BTC', 0.002, 1000)")
+
+cursor.execute("INSERT INTO trades VALUES('ETH', 1.2, 4500)")
+
+rows = cursor.execute("SELECT coin, amount, average_price FROM trades").fetchall() 
+
+print(rows)
+
+# Create functions that insert data into the database and display it into a Flask Web app. 
+
+# Finds matching coin, finds API and displays price in real time. 
