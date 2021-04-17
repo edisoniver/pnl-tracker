@@ -1,0 +1,3 @@
+import ccxt 
+import requests 
+
