@@ -55,10 +55,12 @@ def sql_insert(coin, amount, entry, newdate):
             pass
         else:
             newdate = newdate + ' | ' + datenow 
-
+        variable = 'UPDATE trades SET amount = {0}, entry = {1} WHERE coin = "{2}"'.format(float(amount), float(entry), coin)  
+        update = cursor.execute(variable)        
         print('EXISTING VALUE', existing_value, amount, entry, newdate)
-
+        
         connection.commit()
+
         # Drop a row then add new table. 
         # OR 
         # Update table with unique ID.
