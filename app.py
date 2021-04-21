@@ -30,12 +30,13 @@ connection = sqlite3.connect('trades.db')
 global cur
 cursor = connection.cursor()
 
-cursor.execute("CREATE TABLE IF NOT EXISTS trades(id INTEGER PRIMARY KEY AUTOINCREMENT, coin TEXT, amount FLOAT, date TEXT)") 
+cursor.execute("CREATE TABLE IF NOT EXISTS trades(id INTEGER PRIMARY KEY AUTOINCREMENT, coin TEXT, amount FLOAT, price FLOAT,  date TEXT)") 
 
 @app.route("/")
 
 def main():
-    return render_template('home.html')
+    info = panda_dataframe()
+    return render_template('home.html', tables=[info.to_html(classes='data')], titles=info.columns.values)
 
 
 
@@ -46,15 +47,17 @@ def starter():
    # balance = fetches_balance_amount()
    # coins = get_coin_values()
    # print(coins[1], balance, coins[0])
-   # fetch_account()
+   fetch_account()
    panda_dataframe()
 
 
 def panda_dataframe():
     db = sqla.create_engine('sqlite:///trades.db')
     datas=pd.read_sql('SELECT * FROM trades', db)
+    datas['price'] = datas['price'].map('${:,.4f}'.format)
+    datas['amount'] = datas['amount'].map('{:,.8f}'.format)
     print(datas)
-
+    return datas
 
 
 def sql_insert(coin, amount, newdate):
@@ -130,16 +133,14 @@ def fetches_coin_price(coins):
         if (exchange.has['fetchTicker']):
             coin_pair = '{0}/USDT'.format(coins)
             get_price = exchange.fetch_ticker(coin_pair)
-           # print(get_price['info']['lastPrice'])
             coin_price = get_price['info']['lastPrice']     
     except:
         if (exchange.has['fetchTicker']):
             coin_pair = '{0}/BTC'.format(coins)
             get_price = exchange.fetch_ticker(coin_pair)
-           # print(get_price['info']['lastPrice'])
+           # print(get_price['info']['lastPrice'])j
             coin_price = get_price['info']['lastPrice']
     return coin_price
-
 
 
 
@@ -160,6 +161,8 @@ def fetch_account():
     for coins, price in my_balance.items():
         if price == 0.0:
             pass
+        elif coins == 'QI':
+            pass
         else:
             coin_balance.append([coins, price])
     for items in coin_balance:
@@ -173,7 +176,31 @@ def fetch_account():
             variable = 'UPDATE trades SET amount = {0} WHERE coin = "{1}"'.format(float(items[1]), items[0])
             cursor.execute(variable)
             connection.commit()
-        
+    #cursor.execute('DELETE from trades WHERE coin = "{0}"'.format(Q))
+    for x in coin_balance:
+        if x[0] == 'QI':
+            index_value = coin_balance.index(x)
+            print('Removed QI',index_value)
+            coin_balance.pop(index_value)
+        elif x[0] == 'NSBT':
+            index_value = coin_balance.index(x)
+            print('Removed NSBT', index_value)
+            coin_balance.pop(index_value)
+        elif x[0] == 'USDT':
+            index_value = coin_balance.index(x)
+            print('Removed USDT', index_value)
+            coin_balance.pop(index_value)
+        else:
+            pass
+    print(coin_balance)
+    for items in coin_balance: 
+        command = 'UPDATE trades SET price = {0} WHERE coin = "{1}"'.format(float(fetches_coin_price(items[0])), items[0])
+        cursor.execute(command)
+
+        connection.commit()
+
+
+
 starter()
 
 if __name__ == "__main__":
