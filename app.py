@@ -3,6 +3,8 @@ import pandas as pd
 from flask import Flask, request, render_template 
 import sqlite3
 import ccxt 
+import pandas as pd
+import sqlalchemy as sqla
 from datetime import date
 app = Flask(__name__)
 
@@ -14,10 +16,6 @@ exchange = exchange_class({
     'timeout': 30000,
     'enableRateLimit': True,
 })
-
-if (exchange.has['fetchTicker']):
-    test = exchange.fetch_ticker('LTC/USDT')
-    print(test['info']['lastPrice'])
 
     # Repeat this for all symbols in database and display it onto the Flask Website. 
 
@@ -42,23 +40,22 @@ def main():
 
 
 
-
-
-
-
 def starter():
- #   coin = str(input("What is coin? "))
-  #  amount = float(input("How many? "))
-    #datenow = today.strftime("%b-%d-%Y")
  
-  #  sql_insert(coin, amount, entry, datenow)
-    coin_info()
-    get_coin_values()
-    fetch_account()
-def coin_info():
+ #   print(get_coin_values())
+   # balance = fetches_balance_amount()
+   # coins = get_coin_values()
+   # print(coins[1], balance, coins[0])
+   # fetch_account()
+   panda_dataframe()
 
-    rows = cursor.execute("SELECT id, coin, amount, date FROM trades").fetchall() 
-    print(rows)
+
+def panda_dataframe():
+    db = sqla.create_engine('sqlite:///trades.db')
+    datas=pd.read_sql('SELECT * FROM trades', db)
+    print(datas)
+
+
 
 def sql_insert(coin, amount, newdate):
     # --------- # 
@@ -96,11 +93,56 @@ def get_coin_values():
    # We need coin name, price, amount and date. 
    # We need to fetch this every x seconds. j
     coins = cursor.execute("SELECT coin from TRADES").fetchall() 
-    
+    coin_stripped = []
+    for x in coins:
+        coin_stripped.append(x)
+    new_strip = [] # This is the resultant array of the coins in the database. Cleaned and ready to go :)))
 
-    return coins
+    for i in coin_stripped:
+        x = str(i)
+        g = x.strip("(),'")
+        new_strip.append(g)
+    # Get an array that gets prices with the coins. 
+    # 1. Get coin -> get price ticker -> get price -> place into array
+    new_strip.remove('USDT')
+    new_strip.remove('QI')
+    new_strip.remove('NSBT')
+    price_of_the_coin = []
+    for items in new_strip:
+        x = fetches_coin_price(items)
+        price_of_the_coin.append(x)
+
+
+    return [price_of_the_coin, new_strip]
+def fetches_balance_amount(): # Fetches the amount of coins in the balance.
+    balance = []
+    amount = cursor.execute("SELECT amount FROM trades").fetchall()
+    for x in amount:
+        x = str(x)
+        x = x.strip('(),')
+        balance.append(x)
 
     
+    return balance
+
+def fetches_coin_price(coins):
+    try:
+        if (exchange.has['fetchTicker']):
+            coin_pair = '{0}/USDT'.format(coins)
+            get_price = exchange.fetch_ticker(coin_pair)
+           # print(get_price['info']['lastPrice'])
+            coin_price = get_price['info']['lastPrice']     
+    except:
+        if (exchange.has['fetchTicker']):
+            coin_pair = '{0}/BTC'.format(coins)
+            get_price = exchange.fetch_ticker(coin_pair)
+           # print(get_price['info']['lastPrice'])
+            coin_price = get_price['info']['lastPrice']
+    return coin_price
+
+
+
+
 
 def fetch_account():
     # Fetches account balance
@@ -132,8 +174,7 @@ def fetch_account():
             cursor.execute(variable)
             connection.commit()
         
-    
-
+starter()
 
 if __name__ == "__main__":
         app.run()
